@@ -206,9 +206,11 @@ class Deck {
     if (this.audio.paused) {
       this.audio.play();
       this.ui.play.textContent = 'Pause';
+      this.skin.setLED('play', true);
     } else {
       this.audio.pause();
       this.ui.play.textContent = 'Play';
+      this.skin.setLED('play', false);
     }
   }
   setEQ() {
@@ -221,6 +223,7 @@ class Deck {
   setFilter(val = 0) {
     // val [-1..1]: negative -> LP, positive -> HP, 0 ~ bypass via allpass/high cutoff
     const abs = Math.abs(val);
+    this.skin.setKnob('filter', (val + 1) / 2);
     if (Math.abs(val) < 0.02) {
       this.filter.type = 'allpass';
     } else if (val < 0) {
@@ -238,8 +241,8 @@ class Deck {
     }
   }
   setGainDb(db) { this.inputGain.gain.value = dbToGain(db); this.skin.setKnob('gain', normKnob(db, -24, 12)); }
-  setDelaySend(v) { this.sendDelay.gain.value = clamp(v, 0, 1); }
-  updateCueSend() { this.cueSend.gain.value = this.ui.cueToggle.checked ? 1 : 0; }
+  setDelaySend(v) { this.sendDelay.gain.value = clamp(v, 0, 1); this.skin.setKnob('send-delay', clamp(v,0,1)); }
+  updateCueSend() { const on = this.ui.cueToggle.checked; this.cueSend.gain.value = on ? 1 : 0; this.skin.setLED('cue', on); }
   setHotCue(i) { this.hotCues[i] = this.audio.currentTime; this.skin.flashPad(i); }
   goHotCue(i) { if (this.hotCues[i] != null) { this.audio.currentTime = this.hotCues[i]; this.skin.flashPad(i); } }
   get secondsPerBeat() { return 60 / (this.bpm || 120); }
@@ -299,6 +302,7 @@ class Deck {
     let delta = phaseOther - phaseThis;
     if (Math.abs(delta) > spb / 2) delta += (delta > 0 ? -spb : spb);
     this.audio.currentTime += delta;
+    this.skin.flashLED('sync');
   }
   animate() {
     const level = this.meterPost.getLevel();
@@ -429,6 +433,11 @@ function boot() {
   const deckB = new Deck(audioCtx, 'B', master);
   master.attachDecks(deckA, deckB);
   master.updateXFader();
+  // Bind interactive skins
+  master.skin = new MasterSkin();
+  master.skin.bindInteractive(master);
+  deckA.skin.ensure().bindInteractive(deckA);
+  deckB.skin.ensure().bindInteractive(deckB);
   // Expose a tiny API for debugging
   window.dj = { audioCtx, master, deckA, deckB };
 }
@@ -545,12 +554,19 @@ document.getElementById('startTutorialBtn').addEventListener('click', () => {
   tutorial.start();
 });
 
+// Visual mode toggle (non-interactive skin)
+document.getElementById('toggleVisual').addEventListener('click', () => {
+  document.body.classList.toggle('visual');
+});
+
 function buildTutorial() {
   const t = new Tutorial();
   const steps = [];
   const { master, deckA, deckB } = window.dj;
   master.skin = new MasterSkin();
-  deckA.skin.ensure(); deckB.skin.ensure();
+  master.skin.bindInteractive(master);
+  deckA.skin.ensure().bindInteractive(deckA);
+  deckB.skin.ensure().bindInteractive(deckB);
 
   steps.push({
     title: 'Start Audio',
@@ -562,7 +578,7 @@ function buildTutorial() {
   steps.push({
     title: 'Crossfader',
     text: 'Use the crossfader to blend Deck A ↔ Deck B. We will move it slowly across.',
-    target: '#crossfader',
+    target: '.center-skin [data-role="crossfader"]',
     action: async () => {
       const xf = master.crossfaderEl;
       // animate -1 -> 1 -> 0
@@ -586,7 +602,7 @@ function buildTutorial() {
   steps.push({
     title: 'Tempo & Beatmatching',
     text: 'Adjust Deck B tempo in small steps to match beats. Try ±2% changes and use Nudge for micro‑corrections.',
-    target: '.deck[data-deck="B"] .tempo',
+    target: '.deck[data-deck="B"] .deck-skin [data-role="tempo"]',
     action: async () => {
       const el = deckB.ui.tempo;
       const seq = [-2, 2, 0];
@@ -599,14 +615,14 @@ function buildTutorial() {
   steps.push({
     title: 'Sync',
     text: 'Use Sync to match Deck B to Deck A (tempo + phase).',
-    target: '.deck[data-deck="B"] .sync',
+    target: '.deck[data-deck="B"] .deck-skin [data-role="sync"]',
     action: () => { deckB.syncToOther(); },
   });
 
   steps.push({
     title: 'EQing',
     text: 'Cut lows when bringing in a new track, then restore. We’ll dip Deck A lows then bring them back.',
-    target: '.deck[data-deck="A"] .eq',
+    target: '.deck[data-deck="A"] .deck-skin [data-role="eq-low"]',
     action: async () => {
       const l = deckA.ui.eqL; setRangeValue(l, -12); deckA.setEQ(); await wait(700); setRangeValue(l, 0); deckA.setEQ();
     },
@@ -615,7 +631,7 @@ function buildTutorial() {
   steps.push({
     title: 'Filter',
     text: 'Use a gentle LP/HP sweep to transition. Watch the single‑knob LP↔HP filter.',
-    target: '.deck[data-deck="B"] input.filter',
+    target: '.deck[data-deck="B"] .deck-skin [data-role="filter"]',
     action: async () => {
       const f = deckB.ui.filter;
       const anim = async (from, to, ms) => {
@@ -639,21 +655,21 @@ function buildTutorial() {
   steps.push({
     title: 'Looping',
     text: 'Engage a 4‑beat loop to extend an intro/outro. Toggle Loop 4 on Deck B.',
-    target: '.deck[data-deck="B"] .loop4',
+    target: '.deck[data-deck="B"] .deck-skin [data-role="loop"]',
     action: async () => { deckB.toggleLoop4(); await wait(700); deckB.toggleLoop4(); },
   });
 
   steps.push({
     title: 'Hot Cues',
     text: 'Set hot cues on key moments and jump between them. We’ll set and trigger Cue 1 on Deck A.',
-    target: '.deck[data-deck="A"] .hotcue[data-idx="0"]',
+    target: '.deck[data-deck="A"] .deck-skin [data-role="hot1"]',
     action: async () => { deckA.setHotCue(0); await wait(300); deckA.goHotCue(0); },
   });
 
   steps.push({
     title: 'Echo FX',
     text: 'Send a bit of Deck A to Echo for transitions. Then adjust time/feedback/wet.',
-    target: '.deck[data-deck="A"] .send-delay',
+    target: '.deck[data-deck="A"] .deck-skin [data-role="send-delay"]',
     action: async () => {
       setRangeValue(deckA.ui.sendDelay, 0.3); deckA.setDelaySend(0.3);
       await wait(300);
@@ -678,7 +694,7 @@ function buildTutorial() {
   steps.push({
     title: 'Gain Staging',
     text: 'Keep meters healthy (avoid clipping). Adjust Deck B Gain slightly and watch meters.',
-    target: '.deck[data-deck="B"] .gain',
+    target: '.deck[data-deck="B"] .deck-skin [data-role="gain"]',
     action: async () => { setRangeValue(deckB.ui.gain, 2); deckB.setGainDb(2); await wait(400); setRangeValue(deckB.ui.gain, 0); deckB.setGainDb(0); },
   });
 
@@ -698,9 +714,60 @@ class DeckSkin{
   flashPad(idx){ const p = this._sel(`hot${idx+1}`); if(!p) return; const frame = p.querySelector('.led-frame'); if(!frame) return; frame.classList.add('led-on'); setTimeout(()=>frame.classList.remove('led-on'), 400); }
   setMeter(level){ const r = this._sel('meter'); if(!r) return; r.setAttribute('width', (6 + level*214).toFixed(0)); }
   setBeat(b, playing){ ['beat0','beat1','beat2','beat3'].forEach((k,i)=>{ const dot=this._sel(k); if(!dot) return; dot.setAttribute('class', 'beat-dot'+(playing&&i===b?' active':'')); }); }
+  flashLED(role){ const el=this._sel(role); const ring=el?.querySelector('.led-ring, .led-frame'); if(!ring) return; ring.classList.add('led-on'); setTimeout(()=>ring.classList.remove('led-on'), 400); }
+  bindInteractive(deck){ if(!this.svg) return; // knobs
+    const drag = (el, getT, onT)=>{
+      const onDown = (e)=>{ e.preventDefault(); el.setPointerCapture?.(e.pointerId); const move=(ev)=>{ onT(getT(ev)); }; const up=()=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); }; window.addEventListener('pointermove',move); window.addEventListener('pointerup',up); onT(getT(e)); };
+      el.addEventListener('pointerdown', onDown);
+    };
+    const knob = (g, setVal)=>{
+      drag(g, (ev)=>{
+        const r = g.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; const dx=ev.clientX-cx, dy=ev.clientY-cy; let ang = Math.atan2(dy, dx)*180/Math.PI; // -180..180
+        // map -135..135
+        ang = Math.max(-135, Math.min(135, ang));
+        return (ang+135)/270; // 0..1
+      }, (t)=> setVal(t));
+    };
+    const faderV = (g, setVal)=>{
+      const track = g.querySelector('.track'); if(!track) return;
+      drag(g, (ev)=>{ const r = track.getBoundingClientRect(); const t = (ev.clientY - r.top)/r.height; return clamp(t,0,1); }, (t)=> setVal(t));
+    };
+    // bind knobs
+    const bindIf = (role, fn)=>{ const g=this._sel(role); if(g) fn(g); };
+    bindIf('eq-low', g=> knob(g, (t)=>{ const db = -12 + t*24; deck.ui.eqL.value=String(db); deck.setEQ(); }));
+    bindIf('eq-mid', g=> knob(g, (t)=>{ const db = -12 + t*24; deck.ui.eqM.value=String(db); deck.setEQ(); }));
+    bindIf('eq-high', g=> knob(g, (t)=>{ const db = -12 + t*24; deck.ui.eqH.value=String(db); deck.setEQ(); }));
+    bindIf('filter', g=> knob(g, (t)=>{ const v = -1 + t*2; deck.ui.filter.value=String(v.toFixed(2)); deck.setFilter(v); }));
+    bindIf('gain', g=> knob(g, (t)=>{ const db = -24 + t*36; deck.ui.gain.value=String(db.toFixed(1)); deck.setGainDb(db); }));
+    bindIf('send-delay', g=> knob(g, (t)=>{ deck.ui.sendDelay.value=String(t.toFixed(2)); deck.setDelaySend(t); }));
+    bindIf('tempo', g=> faderV(g, (t)=>{ const pct = -8 + t*16; deck.ui.tempo.value=String(pct.toFixed(2)); deck.updatePlaybackRate(); }));
+    // buttons
+    const clickRole = (role, fn)=>{ const b=this._sel(role); if(!b) return; b.addEventListener('click', (e)=>{ if(document.body.classList.contains('visual')) return; fn(e); }); };
+    clickRole('play', ()=> deck.togglePlay());
+    clickRole('sync', ()=> deck.syncToOther());
+    clickRole('loop', ()=> deck.toggleLoop4());
+    ['hot1','hot2','hot3','hot4'].forEach((r,i)=> clickRole(r, ()=>{
+      if(deck.hotCues[i]==null) deck.setHotCue(i); else deck.goHotCue(i);
+    }));
+    clickRole('cue', ()=>{ deck.ui.cueToggle.checked = !deck.ui.cueToggle.checked; deck.updateCueSend(); });
+  }
 }
 class MasterSkin{
   constructor(){ this.svg = document.querySelector('.center-skin .skin-svg'); }
   _sel(role){ return this.svg?.querySelector(`[data-role="${role}"]`); }
   setCrossfader(t){ const g=this._sel('crossfader'); if(!g) return; const thumb=g.querySelector('.thumb'); const x = t*260 - 12; thumb?.setAttribute('x', x.toFixed(1)); }
+  bindInteractive(master){ if(!this.svg) return; const g=this._sel('crossfader'); if(!g) return; const track=g.querySelector('.track'); const drag=(ev)=>{ const r=track.getBoundingClientRect(); const t=clamp((ev.clientX - r.left)/r.width, 0,1); const v = (t*2-1); master.crossfaderEl.value=String(v.toFixed(2)); master.updateXFader(); this.setCrossfader(t); };
+    const down=(e)=>{ e.preventDefault(); window.addEventListener('pointermove',drag); window.addEventListener('pointerup',up); drag(e); };
+    const up=()=>{ window.removeEventListener('pointermove',drag); window.removeEventListener('pointerup',up); };
+    g.addEventListener('pointerdown', down);
+    // Echo knobs
+    const knob=(role, onT)=>{ const k=this._sel(role); if(!k) return; const dragKnob=(ev)=>{ const r=k.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; let ang=Math.atan2(ev.clientY-cy, ev.clientX-cx)*180/Math.PI; ang=Math.max(-135, Math.min(135, ang)); const t=(ang+135)/270; onT(t); };
+      const downK=(e)=>{ e.preventDefault(); window.addEventListener('pointermove',dragKnob); window.addEventListener('pointerup',upK); dragKnob(e); };
+      const upK=()=>{ window.removeEventListener('pointermove',dragKnob); window.removeEventListener('pointerup',upK); };
+      k.addEventListener('pointerdown', downK);
+    };
+    knob('echo-time', t=>{ const v = 0.08 + t*(0.8-0.08); master.delayTimeEl.value=String(v.toFixed(2)); master.echo.setTime(v); });
+    knob('echo-feedback', t=>{ const v = t*0.9; master.delayFeedbackEl.value=String(v.toFixed(2)); master.echo.setFeedback(v); });
+    knob('echo-wet', t=>{ const v = t; master.delayWetEl.value=String(v.toFixed(2)); master.echo.setWet(v); });
+  }
 }
