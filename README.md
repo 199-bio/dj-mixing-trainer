@@ -33,6 +33,21 @@ Visual (non‑interactive) mode
 - The app defaults to a non‑interactive, animated tutorial skin (SVG). The original HTML controls are hidden in this mode.
 - Use the Start Tutorial button to see the controls animate like a step‑by‑step lesson.
 
+Layout & design
+- Responsive via CSS container queries: decks scale their skins and controls from small phones to large desktops.
+- 8‑pt spacing tokens and clamp() type scale keep proportions consistent.
+- Minimum pointer targets sized to ≥24px to align with WCAG 2.2 target size.
+- Active deck shows a clear focus ring; keyboard shortcuts operate on the focused deck.
+
+Keyboard shortcuts (modifier‑based by default)
+- Global: Alt+/ Help • Alt+A Start Audio • Alt+T Tutorial • Alt+V Visual Mode • Alt+1 Deck A • Alt+2 Deck B
+- Focused deck: Space Play/Pause • Alt+S Sync • Alt+L Loop 4 • Alt+B Set Beat 1 • Alt+Digit1..4 Hot Cues (add Shift to Set)
+- Tempo: Alt+ArrowUp/Down ±0.25% (Shift for ±1%)
+- Filter: Alt+Comma / Alt+Period
+- Crossfader: Alt+[ / Alt+]
+- Cue & Echo send: Alt+C toggle, Alt+D/E −/+
+- Option: enable single‑key shortcuts in Help (off by default for accessibility)
+
 Deploy on Vercel
 - Push this repo to GitHub and import it in Vercel as a static project. Default settings work. A `vercel.json` is included but optional.
 
