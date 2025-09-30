@@ -6,6 +6,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 let audioCtx;
 let activeDeck = 'A';
 let singleKeyShortcuts = false;
+const demoCache = new Map(); // key: `${bpm}_${variant}` -> objectURL
 
 class Meter {
   constructor(ctx, node) {
@@ -197,6 +198,16 @@ class Deck {
       });
       ['mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, () => clearTimeout(ti)));
     });
+  }
+  async loadDemo(variant='A') {
+    const bpm = parseFloat(this.ui.bpm.value)||128;
+    const key = `${bpm}_${variant}`;
+    let url = demoCache.get(key);
+    if (!url) { url = await createDemoLoopURL({ bpm, variant }); demoCache.set(key, url); }
+    this.audio.src = url;
+    this.audio.loop = true;
+    this.beat1 = 0; // starts at bar 1 beat 1
+    this.ui.trackName.textContent = `Demo ${variant}`;
   }
   loadFile(file) {
     if (!file) return;
@@ -456,6 +467,10 @@ function getActiveDeck(){ return activeDeck === 'A' ? window.dj.deckA : window.d
 document.getElementById('startAudioBtn').addEventListener('click', async () => {
   if (!audioCtx) boot();
   if (audioCtx.state !== 'running') await audioCtx.resume();
+  await ensureDemoTracks();
+  // start playback quietly so meters move in tutorial
+  window.dj.deckA.audio.play().catch(()=>{});
+  window.dj.deckB.audio.play().catch(()=>{});
 });
 
 // Help toggle
@@ -560,8 +575,15 @@ class Tutorial {
 let tutorial;
 document.getElementById('startTutorialBtn').addEventListener('click', () => {
   if (!audioCtx) boot();
-  if (!tutorial) tutorial = buildTutorial();
-  tutorial.start();
+  (async () => {
+    if (audioCtx.state !== 'running') await audioCtx.resume();
+    await ensureDemoTracks();
+    // Autoplay both decks
+    try { await window.dj.deckA.audio.play(); } catch {}
+    try { await window.dj.deckB.audio.play(); } catch {}
+    if (!tutorial) tutorial = buildTutorial();
+    tutorial.start();
+  })();
 });
 
 // Visual mode toggle (non-interactive skin)
@@ -574,6 +596,12 @@ document.addEventListener('click', (e)=>{
   const deckEl = e.target.closest?.('.deck');
   if (deckEl) setActiveDeck(deckEl.dataset.deck);
 });
+
+async function ensureDemoTracks(){
+  const { deckA, deckB } = window.dj;
+  if (!deckA.audio.src) await deckA.loadDemo('A');
+  if (!deckB.audio.src) await deckB.loadDemo('B');
+}
 
 // Shortcuts (modifier-based by default)
 function isTypingTarget(ev){
@@ -853,3 +881,104 @@ class MasterSkin{
     knob('echo-wet', t=>{ const v = t; master.delayWetEl.value=String(v.toFixed(2)); master.echo.setWet(v); });
   }
 }
+
+// ---------- Demo audio (no upload required) ----------
+async function createDemoLoopURL({ bpm=128, variant='A' }){
+  const bars = 8; // 8-bar loop
+  const spb = 60 / bpm;
+  const duration = bars * 4 * spb;
+  const rate = 44100;
+  const ctx = new OfflineAudioContext(2, Math.ceil(duration * rate), rate);
+  const master = ctx.createGain(); master.gain.value = 0.8; master.connect(ctx.destination);
+
+  const mkNoise = (lenSec)=>{
+    const b = ctx.createBuffer(1, Math.ceil(lenSec * rate), rate); const d = b.getChannelData(0);
+    for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b;
+  };
+  const noiseShort = mkNoise(0.2);
+
+  const addKick = (t)=>{
+    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.setValueAtTime(60, t); osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+    const g = ctx.createGain(); g.gain.setValueAtTime(1.0, t); g.gain.exponentialRampToValueAtTime(1e-3, t + 0.14);
+    osc.connect(g).connect(master); osc.start(t); osc.stop(t + 0.15);
+  };
+  const addClap = (t)=>{
+    const src = ctx.createBufferSource(); src.buffer = noiseShort;
+    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.8, t); g.gain.exponentialRampToValueAtTime(1e-3, t + 0.12);
+    src.connect(bp).connect(g).connect(master); src.start(t); src.stop(t + 0.12);
+  };
+  const addHat = (t)=>{
+    const src = ctx.createBufferSource(); src.buffer = noiseShort;
+    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value = 8000; hp.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(1e-3, t + 0.06);
+    src.connect(hp).connect(g).connect(master); src.start(t); src.stop(t + 0.06);
+  };
+  const addBass = (t)=>{
+    const osc = ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.setValueAtTime(55, t);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.15, t); g.gain.linearRampToValueAtTime(0.0, t + spb*0.8);
+    const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 400;
+    osc.connect(lp).connect(g).connect(master); osc.start(t); osc.stop(t + spb);
+  };
+
+  const totalBeats = bars * 4;
+  for (let i=0;i<totalBeats;i++){
+    const t = i * spb;
+    // Common hats on 8ths
+    addHat(t);
+    addHat(t + spb*0.5);
+    // Variant parts
+    if (variant === 'A'){
+      addKick(t);
+      if (i % 4 === 0) addBass(t);
+    } else {
+      addKick(t);
+      if (i % 4 === 2) addClap(t);
+    }
+  }
+
+  const buffer = await ctx.startRendering();
+  const url = bufferToWavURL(buffer);
+  return url;
+}
+
+function bufferToWavURL(buffer){
+  const numCh = buffer.numberOfChannels; const sampleRate = buffer.sampleRate; const len = buffer.length;
+  const interleaved = new Float32Array(len * numCh);
+  for (let ch=0; ch<numCh; ch++){
+    const data = buffer.getChannelData(ch);
+    for (let i=0;i<len;i++) interleaved[i*numCh + ch] = data[i];
+  }
+  const wav = encodeWAV(interleaved, numCh, sampleRate);
+  return URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
+}
+
+function encodeWAV(samples, numChannels, sampleRate){
+  const bytesPerSample = 2; // 16-bit PCM
+  const blockAlign = numChannels * bytesPerSample;
+  const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
+  const view = new DataView(buffer);
+  /* RIFF header */
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // PCM chunk size
+  view.setUint16(20, 1, true); // format = PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 8 * bytesPerSample, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, samples.length * bytesPerSample, true);
+  // PCM samples
+  let offset = 44;
+  for (let i=0;i<samples.length;i++){
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    offset += 2;
+  }
+  return view;
+}
+function writeString(view, offset, str){ for (let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); }
