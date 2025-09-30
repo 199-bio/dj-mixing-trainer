@@ -134,6 +134,7 @@ class Deck {
     this.nudgeTimeout = null;
 
     this.wireUI();
+    this.skin = new DeckSkin(this.dom, id);
     this.animate();
   }
   wireUI() {
@@ -213,6 +214,9 @@ class Deck {
   setEQ() {
     const l = parseFloat(this.ui.eqL.value), m = parseFloat(this.ui.eqM.value), h = parseFloat(this.ui.eqH.value);
     this.low.gain.value = l; this.mid.gain.value = m; this.high.gain.value = h;
+    this.skin.setKnob('eq-low', normKnob(l, -12, 12));
+    this.skin.setKnob('eq-mid', normKnob(m, -12, 12));
+    this.skin.setKnob('eq-high', normKnob(h, -12, 12));
   }
   setFilter(val = 0) {
     // val [-1..1]: negative -> LP, positive -> HP, 0 ~ bypass via allpass/high cutoff
@@ -233,11 +237,11 @@ class Deck {
       this.filter.Q.value = 0.9;
     }
   }
-  setGainDb(db) { this.inputGain.gain.value = dbToGain(db); }
+  setGainDb(db) { this.inputGain.gain.value = dbToGain(db); this.skin.setKnob('gain', normKnob(db, -24, 12)); }
   setDelaySend(v) { this.sendDelay.gain.value = clamp(v, 0, 1); }
   updateCueSend() { this.cueSend.gain.value = this.ui.cueToggle.checked ? 1 : 0; }
-  setHotCue(i) { this.hotCues[i] = this.audio.currentTime; }
-  goHotCue(i) { if (this.hotCues[i] != null) this.audio.currentTime = this.hotCues[i]; }
+  setHotCue(i) { this.hotCues[i] = this.audio.currentTime; this.skin.flashPad(i); }
+  goHotCue(i) { if (this.hotCues[i] != null) { this.audio.currentTime = this.hotCues[i]; this.skin.flashPad(i); } }
   get secondsPerBeat() { return 60 / (this.bpm || 120); }
   updateLoop() {
     if (!this.audio._loop4) return;
@@ -255,9 +259,11 @@ class Deck {
     if (this.audio._loop4) {
       this.updateLoop();
       this.ui.loop4.classList.add('active');
+      this.skin.setLED('loop', true);
     } else {
       this.audio.loop = false;
       this.ui.loop4.classList.remove('active');
+      this.skin.setLED('loop', false);
     }
   }
   updatePlaybackRate() {
@@ -267,6 +273,7 @@ class Deck {
     const nudge = this.audio._nudgeRate || 1;
     this.audio.playbackRate = rate * nudge;
     this.ui.tempoRO.textContent = `${pct.toFixed(2)}%`;
+    this.skin.setFader('tempo', (pct + 8) / 16); // map -8..8 -> 0..1
   }
   nudge(dir) {
     const amt = 0.02 * dir; // +/- 2%
@@ -296,11 +303,13 @@ class Deck {
   animate() {
     const level = this.meterPost.getLevel();
     this.ui.meter.style.width = `${(level * 100).toFixed(1)}%`;
+    this.skin.setMeter(level);
     // Beat dots (simple metronome from beat1 + bpm)
     const spb = this.secondsPerBeat;
     const t = this.audio.currentTime - this.beat1;
     const beat = Math.floor(Math.max(0, t) / spb) % 4;
     this.ui.beatDots.forEach((d,i) => d.classList.toggle('active', i === beat && !this.audio.paused));
+    this.skin.setBeat(beat, !this.audio.paused);
     requestAnimationFrame(() => this.animate());
   }
 }
@@ -371,6 +380,7 @@ class Master {
     const [ga, gb] = constantPower(parseFloat(this.crossfaderEl.value));
     this.deckBus.A.gain.value = ga;
     this.deckBus.B.gain.value = gb;
+    this.skin?.setCrossfader((parseFloat(this.crossfaderEl.value)+1)/2);
   }
   otherDeck(id) { return id === 'A' ? this.deckB : this.deckA; }
   attachDecks(a, b) { this.deckA = a; this.deckB = b; }
@@ -539,6 +549,8 @@ function buildTutorial() {
   const t = new Tutorial();
   const steps = [];
   const { master, deckA, deckB } = window.dj;
+  master.skin = new MasterSkin();
+  deckA.skin.ensure(); deckB.skin.ensure();
 
   steps.push({
     title: 'Start Audio',
@@ -671,4 +683,24 @@ function buildTutorial() {
   });
 
   return t.use(steps);
+}
+
+// ---------- Visual Skin helpers ----------
+function normKnob(val, min, max){ return clamp((val - min)/(max - min), 0, 1); }
+class DeckSkin{
+  constructor(deckDom, id){ this.deckDom = deckDom; this.id = id; this.svg = deckDom.querySelector('.deck-skin .skin-svg'); }
+  ensure(){ this.svg = this.svg || this.deckDom.querySelector('.deck-skin .skin-svg'); return this; }
+  _sel(role){ return this.svg?.querySelector(`[data-role="${role}"]`); }
+  setKnob(role, t){ const g = this._sel(role); if(!g) return; // t in [0,1]
+    const angle = -135 + t*270; const tr = g.getAttribute('transform')||''; const m = tr.match(/translate\(([^)]+)\)/); if(!m) return; const [cx,cy]=m[1].split(',').map(parseFloat); g.setAttribute('transform', `translate(${cx},${cy}) rotate(${angle})`); }
+  setFader(role, t){ const g = this._sel(role); if(!g) return; const thumb = g.querySelector('.thumb'); const y = -60 + t*120; thumb?.setAttribute('y', y.toFixed(1)); }
+  setLED(role, on){ const b = this._sel(role); if(!b) return; const ring = b.querySelector('.led-ring, .led-frame'); if(ring) ring.setAttribute('class', (ring.getAttribute('class')||'') + (on?' led-on':'')); if(!on){ ring?.setAttribute('class', (ring.getAttribute('class')||'').replace(' led-on','')); } }
+  flashPad(idx){ const p = this._sel(`hot${idx+1}`); if(!p) return; const frame = p.querySelector('.led-frame'); if(!frame) return; frame.classList.add('led-on'); setTimeout(()=>frame.classList.remove('led-on'), 400); }
+  setMeter(level){ const r = this._sel('meter'); if(!r) return; r.setAttribute('width', (6 + level*214).toFixed(0)); }
+  setBeat(b, playing){ ['beat0','beat1','beat2','beat3'].forEach((k,i)=>{ const dot=this._sel(k); if(!dot) return; dot.setAttribute('class', 'beat-dot'+(playing&&i===b?' active':'')); }); }
+}
+class MasterSkin{
+  constructor(){ this.svg = document.querySelector('.center-skin .skin-svg'); }
+  _sel(role){ return this.svg?.querySelector(`[data-role="${role}"]`); }
+  setCrossfader(t){ const g=this._sel('crossfader'); if(!g) return; const thumb=g.querySelector('.thumb'); const x = t*260 - 12; thumb?.setAttribute('x', x.toFixed(1)); }
 }
