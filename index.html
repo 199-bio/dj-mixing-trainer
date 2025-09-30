@@ -9,13 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body class="visual">
+  <body>
     <header class="topbar">
       <h1>DJ Mixing Trainer</h1>
       <div class="actions">
         <button id="helpBtn" title="Show help">Help</button>
         <button id="startAudioBtn" title="Initialize audio">Start Audio</button>
         <button id="startTutorialBtn" title="Start guided tutorial">Start Tutorial</button>
+        <button id="toggleVisual" title="Toggle non-interactive visual mode">Visual Mode</button>
       </div>
     </header>
 
@@ -45,6 +46,11 @@
             <g class="knob" data-role="gain" transform="translate(300,46)">
               <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
               <text y="38" class="label">GAIN</text>
+            </g>
+            <!-- Send (Echo) -->
+            <g class="knob" data-role="send-delay" transform="translate(300,108)">
+              <circle r="18" class="knob-face"/><line y1="-12" y2="-20" class="knob-pointer"/>
+              <text y="34" class="label">SEND</text>
             </g>
             <!-- Transport buttons -->
             <g class="button" data-role="cue" transform="translate(40,108)">
@@ -218,6 +224,7 @@
             <g class="knob" data-role="eq-high" transform="translate(180,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">HI</text></g>
             <g class="knob" data-role="filter" transform="translate(240,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">FILTER</text></g>
             <g class="knob" data-role="gain" transform="translate(300,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">GAIN</text></g>
+            <g class="knob" data-role="send-delay" transform="translate(300,108)"><circle r="18" class="knob-face"/><line y1="-12" y2="-20" class="knob-pointer"/><text y="34" class="label">SEND</text></g>
             <!-- Transport -->
             <g class="button" data-role="cue" transform="translate(40,108)"><circle r="16" class="btn-face"/><circle r="20" class="led-ring led-orange"/><text y="34" class="label">CUE</text></g>
             <g class="button" data-role="play" transform="translate(88,108)"><circle r="16" class="btn-face"/><circle r="20" class="led-ring led-green"/><text y="34" class="label">PLAY</text></g>
