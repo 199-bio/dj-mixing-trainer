@@ -10,7 +10,7 @@ button:hover{ background:#2a2f38 }
 input[type="range"], input[type="number"], input[type="text"]{ width:100% }
 label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:6px }
 .layout{ display:grid; grid-template-columns: 1fr 320px 1fr; gap:16px; padding:16px }
-.deck{ background:var(--panel); padding:12px; border:1px solid #1d2026; border-radius:10px; display:flex; flex-direction:column; gap:10px }
+.deck{ background:var(--panel); padding:12px; border:1px solid #1d2026; border-radius:10px; display:flex; flex-direction:column; gap:10px; position:relative }
 .deck h2{ margin:2px 0 4px; font-size:16px }
 .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
 .file .track-name{ flex:1; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
@@ -57,3 +57,29 @@ label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; 
 .pulse{ position:relative; }
 .pulse::after{ content:""; position:absolute; inset:-6px; border-radius:10px; border:2px solid var(--accent); animation:pulse 1.4s ease-out infinite; pointer-events:none }
 @keyframes pulse{ 0%{ opacity:1; transform:scale(.98) } 80%{ opacity:0; transform:scale(1.08) } 100%{ opacity:0 } }
+
+/* Visual (non-interactive) skin */
+.visual .row, .visual .xfader, .visual .master { display:none }
+.visual .skin{ display:block }
+.skin{ pointer-events:none }
+.skin-svg{ width:100%; height:auto; display:block }
+.skin .label{ fill:var(--muted); font-size:10px; text-anchor:middle }
+.btn-face{ fill:url(#btnGrad, none); filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); stroke:#2a2f38; stroke-width:1 }
+.button.square .btn-face{ fill:#1b1e24 }
+.knob-face{ fill:#1c2027; stroke:#2a2f38; stroke-width:1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)) }
+.knob-pointer{ stroke:#e6e8ee; stroke-width:2; stroke-linecap:round }
+.led-ring{ fill:none; stroke-width:3; opacity:.25 }
+.led-frame{ fill:none; stroke-width:2; opacity:.25 }
+.led-on{ opacity:1 }
+.led-green{ stroke:#43d17b }
+.led-blue{ stroke:#3fc1c9 }
+.led-orange{ stroke:#ffb54a }
+.led-amber{ stroke:#ffc266 }
+.led-cyan{ stroke:#3de1ff }
+.pad-face{ fill:#1a1d22; stroke:#2a2f38; stroke-width:1 }
+.fader .track{ fill:#0b0d11; stroke:#2a2f38; stroke-width:1 }
+.fader .thumb{ fill:#2a2f38; stroke:#3b414d; stroke-width:1 }
+.meter-bg{ fill:#0b0d11; stroke:#1d2026; stroke-width:1 }
+.meter-fill{ fill:linear-gradient(90deg, var(--good), var(--warn), var(--danger)); }
+.beat-dot{ fill:#2a2f38 }
+.beat-dot.active{ fill:var(--accent) }
