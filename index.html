@@ -13,10 +13,10 @@
     <header class="topbar">
       <h1>DJ Mixing Trainer</h1>
       <div class="actions">
-        <button id="helpBtn" title="Show help">Help</button>
-        <button id="startAudioBtn" title="Initialize audio">Start Audio</button>
-        <button id="startTutorialBtn" title="Start guided tutorial">Start Tutorial</button>
-        <button id="toggleVisual" title="Toggle non-interactive visual mode">Visual Mode</button>
+        <button id="helpBtn" title="Show help" aria-keyshortcuts="Alt+/">Help</button>
+        <button id="startAudioBtn" title="Initialize audio" aria-keyshortcuts="Alt+A">Start Audio</button>
+        <button id="startTutorialBtn" title="Start guided tutorial" aria-keyshortcuts="Alt+T">Start Tutorial</button>
+        <button id="toggleVisual" title="Toggle non-interactive visual mode" aria-keyshortcuts="Alt+V">Visual Mode</button>
       </div>
     </header>
 
@@ -357,6 +357,22 @@
           <li>Effects — Echo send + time/feedback/wet</li>
           <li>Harmonic mixing — Key fields + compatibility hint</li>
         </ol>
+        <h3>Keyboard Shortcuts</h3>
+        <ul>
+          <li>Alt+1 / Alt+2 — Focus Deck A/B</li>
+          <li>Space — Play/Pause (focused deck)</li>
+          <li>Alt+S — Sync to other deck</li>
+          <li>Alt+L — Toggle Loop 4 • Alt+B — Set Beat 1</li>
+          <li>Alt+Digit1..4 — Hot Cue 1..4 • Add Shift to Set</li>
+          <li>Alt+ArrowUp/Down — Tempo ±0.25% • +Shift for ±1%</li>
+          <li>Alt+Comma/Period — Filter LP/HP sweep</li>
+          <li>Alt+BracketLeft/Right — Crossfader L/R</li>
+          <li>Alt+C — Toggle Cue • Alt+E/Alt+Shift+E — Echo send ±</li>
+          <li>Alt+/ — Help • Alt+T — Tutorial • Alt+V — Visual Mode</li>
+        </ul>
+        <label style="display:flex;gap:8px;align-items:center;margin:8px 0;">
+          <input id="singleKeyToggle" type="checkbox" /> Enable single‑key shortcuts (not recommended; use with care)
+        </label>
         <p>Tip: click “Start Audio” first (required by browsers).</p>
         <button id="closeHelp">Close</button>
       </div>
