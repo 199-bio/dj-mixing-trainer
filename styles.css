@@ -1,7 +1,19 @@
-:root{ --bg:#0c0d10; --panel:#14161a; --accent:#3fc1c9; --text:#e6e8ee; --muted:#98a0ad; --good:#43d17b; --warn:#ffb54a; --danger:#ff5d5d }
+:root{
+  /* Colors */
+  --bg:#0c0d10; --panel:#14161a; --accent:#3fc1c9; --text:#e6e8ee; --muted:#98a0ad; --good:#43d17b; --warn:#ffb54a; --danger:#ff5d5d;
+  /* Type scale */
+  --fs-0: clamp(12px, 0.8vw, 13px);
+  --fs-1: clamp(13px, 0.9vw, 14px);
+  --fs-2: clamp(14px, 1.1vw, 16px);
+  --fs-3: clamp(16px, 1.4vw, 18px);
+  /* Spacing (8pt grid) */
+  --space-2: 2px; --space-4: 4px; --space-6: 6px; --space-8: 8px; --space-12: 12px; --space-16: 16px; --space-20: 20px; --space-24: 24px; --space-32: 32px; --space-40: 40px; --space-48: 48px; --space-64: 64px; --space-96: 96px;
+  /* Targets (WCAG 2.2: 24x24) */
+  --target-min: 24px;
+}
 *{ box-sizing:border-box }
 html,body{ height:100% }
-body{ margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text) }
+body{ margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); font-size:var(--fs-2) }
 .topbar{ display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--panel); border-bottom:1px solid #1d2026 }
 .topbar h1{ margin:0; font-size:18px }
 .topbar .actions button{ margin-left:8px }
@@ -9,8 +21,8 @@ button{ background:#22262d; color:var(--text); border:1px solid #2a2f38; border-
 button:hover{ background:#2a2f38 }
 input[type="range"], input[type="number"], input[type="text"]{ width:100% }
 label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:6px }
-.layout{ display:grid; grid-template-columns: 1fr 320px 1fr; gap:16px; padding:16px }
-.deck{ background:var(--panel); padding:12px; border:1px solid #1d2026; border-radius:10px; display:flex; flex-direction:column; gap:10px; position:relative }
+.layout{ display:grid; grid-template-columns: 1fr 340px 1fr; gap:var(--space-16); padding:var(--space-16) }
+.deck{ background:var(--panel); padding:var(--space-12); border:1px solid #1d2026; border-radius:10px; display:flex; flex-direction:column; gap:var(--space-10,10px); position:relative; container-type:inline-size; container-name:deck }
 .deck h2{ margin:2px 0 4px; font-size:16px }
 .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
 .file .track-name{ flex:1; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
@@ -22,7 +34,7 @@ label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; 
 .hotcues{ display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; width:100% }
 .hotcue{ display:flex; gap:6px }
 .cue-toggle{ display:flex; align-items:center; gap:6px }
-.xfader, .master{ background:var(--panel); border:1px solid #1d2026; border-radius:10px; padding:12px; margin-bottom:12px }
+.xfader, .master{ background:var(--panel); border:1px solid #1d2026; border-radius:10px; padding:var(--space-12); margin-bottom:var(--space-12) }
 .master h3{ margin:8px 0 }
 .meter{ width:100%; height:10px; background:#0b0d11; border:1px solid #1d2026; border-radius:6px; overflow:hidden }
 .meter .bar{ height:100%; width:2%; background:linear-gradient(90deg, var(--good), var(--warn)); transition:width .06s linear }
@@ -38,6 +50,21 @@ label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; 
 .actions button:hover, .help-inner button:hover{ filter:brightness(0.95) }
 .harmonic{ color:var(--muted); font-size:12px; margin-top:6px }
 @media (max-width: 1000px){ .layout{ grid-template-columns: 1fr; } .center{ order:3 } }
+
+/* Container queries: deck scales gracefully */
+@container deck (min-width: 520px){
+  .skin-svg{ max-width: 520px; margin-inline:auto }
+}
+@container deck (max-width: 400px){
+  .skin-svg{ max-width: 360px }
+}
+
+/* Active deck focus ring */
+.deck[data-active="true"]{ outline:2px solid var(--accent); outline-offset:2px }
+
+/* Minimum pointer target size */
+.skin .button, .skin .pad, .skin .knob, .skin .fader .thumb, button, input[type="range"]{ min-width:var(--target-min); min-height:var(--target-min) }
+.skin .button, .skin .pad, .skin .knob, .skin .fader .thumb{ cursor:pointer }
 
 /* Tutorial (coachmarks) */
 .coach.hidden{ display:none }
