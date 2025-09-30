@@ -4,6 +4,8 @@ const dbToGain = (db) => Math.pow(10, db / 20);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 let audioCtx;
+let activeDeck = 'A';
+let singleKeyShortcuts = false;
 
 class Meter {
   constructor(ctx, node) {
@@ -440,7 +442,15 @@ function boot() {
   deckB.skin.ensure().bindInteractive(deckB);
   // Expose a tiny API for debugging
   window.dj = { audioCtx, master, deckA, deckB };
+  // default active deck
+  setActiveDeck('A');
 }
+
+function setActiveDeck(id){
+  activeDeck = id;
+  document.querySelectorAll('.deck').forEach(d=> d.setAttribute('data-active', String(d.dataset.deck === id)));
+}
+function getActiveDeck(){ return activeDeck === 'A' ? window.dj.deckA : window.dj.deckB; }
 
 // UI: start/resume
 document.getElementById('startAudioBtn').addEventListener('click', async () => {
@@ -558,6 +568,78 @@ document.getElementById('startTutorialBtn').addEventListener('click', () => {
 document.getElementById('toggleVisual').addEventListener('click', () => {
   document.body.classList.toggle('visual');
 });
+
+// Deck focus via click
+document.addEventListener('click', (e)=>{
+  const deckEl = e.target.closest?.('.deck');
+  if (deckEl) setActiveDeck(deckEl.dataset.deck);
+});
+
+// Shortcuts (modifier-based by default)
+function isTypingTarget(ev){
+  const t = ev.target;
+  return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+}
+
+window.addEventListener('keydown', (e)=>{
+  if (!window.dj) return;
+  if (isTypingTarget(e)) return;
+  const d = getActiveDeck();
+  const m = window.dj.master;
+  const alt = e.altKey; const shift = e.shiftKey; const code = e.code;
+
+  // Global
+  if (alt && code === 'Slash') { e.preventDefault(); document.getElementById('help').classList.remove('hidden'); return; }
+  if (alt && code === 'KeyA') { e.preventDefault(); document.getElementById('startAudioBtn').click(); return; }
+  if (alt && code === 'KeyT') { e.preventDefault(); document.getElementById('startTutorialBtn').click(); return; }
+  if (alt && code === 'KeyV') { e.preventDefault(); document.getElementById('toggleVisual').click(); return; }
+  if (alt && code === 'Digit1') { e.preventDefault(); setActiveDeck('A'); return; }
+  if (alt && code === 'Digit2') { e.preventDefault(); setActiveDeck('B'); return; }
+
+  // Deck actions
+  if (code === 'Space' && (singleKeyShortcuts || alt)) { e.preventDefault(); d.togglePlay(); return; }
+  if (alt && code === 'KeyS') { e.preventDefault(); d.syncToOther(); return; }
+  if (alt && code === 'KeyL') { e.preventDefault(); d.toggleLoop4(); return; }
+  if (alt && code === 'KeyB') { e.preventDefault(); d.beat1 = d.audio.currentTime; d.updateLoop(); return; }
+  if (alt && (/^Digit[1-4]$/.test(code))) {
+    e.preventDefault(); const idx = parseInt(code.slice(-1),10)-1; if (shift) d.setHotCue(idx); else d.goHotCue(idx); return;
+  }
+
+  // Tempo
+  if (alt && (code === 'ArrowUp' || code === 'ArrowDown')){
+    e.preventDefault();
+    const delta = shift ? 1.0 : 0.25; // percent
+    const sign = code === 'ArrowUp' ? +1 : -1;
+    const cur = parseFloat(d.ui.tempo.value)||0;
+    d.ui.tempo.value = String(clamp(cur + sign*delta, -8, 8).toFixed(2));
+    d.updatePlaybackRate();
+    return;
+  }
+  // Filter
+  if (alt && (code === 'Comma' || code === 'Period')){
+    e.preventDefault(); const cur = parseFloat(d.ui.filter.value)||0; const step = 0.1*(shift?2:1); const dir = code==='Comma'?-1:1; const v = clamp(cur + dir*step, -1, 1);
+    d.ui.filter.value = String(v.toFixed(2)); d.setFilter(v); return;
+  }
+  // Crossfader
+  if (alt && (code === 'BracketLeft' || code === 'BracketRight')){
+    e.preventDefault(); const el = m.crossfaderEl; const cur = parseFloat(el.value)||0; const step = (shift?0.2:0.05) * (code==='BracketLeft'?-1:1);
+    el.value = String(clamp(cur + step, -1, 1).toFixed(2)); m.updateXFader(); return;
+  }
+  // Cue & Echo send
+  if (alt && code === 'KeyC'){ e.preventDefault(); d.ui.cueToggle.checked = !d.ui.cueToggle.checked; d.updateCueSend(); return; }
+  if (alt && code === 'KeyE'){ e.preventDefault(); const cur = parseFloat(d.ui.sendDelay.value)||0; const step = shift?0.1:0.05; const v = clamp(cur + step, 0, 1); d.ui.sendDelay.value=String(v.toFixed(2)); d.setDelaySend(v); return; }
+  if (alt && code === 'KeyD'){ e.preventDefault(); const cur = parseFloat(d.ui.sendDelay.value)||0; const step = shift?0.1:0.05; const v = clamp(cur - step, 0, 1); d.ui.sendDelay.value=String(v.toFixed(2)); d.setDelaySend(v); return; }
+});
+
+// Single-key toggle persistence
+const skToggle = document.getElementById('singleKeyToggle');
+if (skToggle) {
+  singleKeyShortcuts = localStorage.getItem('dj.singleKeys') === '1';
+  skToggle.checked = singleKeyShortcuts;
+  skToggle.addEventListener('change', ()=>{
+    singleKeyShortcuts = skToggle.checked; localStorage.setItem('dj.singleKeys', singleKeyShortcuts?'1':'0');
+  });
+}
 
 function buildTutorial() {
   const t = new Tutorial();
