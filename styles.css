@@ -25,6 +25,7 @@ label{ font-size:12px; color:var(--muted); display:flex; flex-direction:column; 
 .deck{ background:var(--panel); padding:var(--space-12); border:1px solid #1d2026; border-radius:10px; display:flex; flex-direction:column; gap:var(--space-10,10px); position:relative; container-type:inline-size; container-name:deck }
 .deck h2{ margin:2px 0 4px; font-size:16px }
 .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+.row.file{ display:none }
 .file .track-name{ flex:1; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .transport button, .loop button, .hotcues button{ flex:1 }
 .loop button.active{ background:var(--accent); color:#081317; border-color:var(--accent) }
