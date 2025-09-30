@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DJ Mixing Trainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>DJ Mixing Trainer</h1>
+      <div class="actions">
+        <button id="helpBtn" title="Show help">Help</button>
+        <button id="startAudioBtn" title="Initialize audio">Start Audio</button>
+        <button id="startTutorialBtn" title="Start guided tutorial">Start Tutorial</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="deck" data-deck="A">
+        <h2>Deck A</h2>
+        <div class="row file">
+          <input type="file" accept="audio/*" class="file-input" />
+          <span class="track-name" title="Loaded track name">No track</span>
+        </div>
+        <div class="row transport">
+          <button class="play">Play</button>
+          <button class="sync" title="Sync tempo & phase to other deck">Sync</button>
+          <button class="nudge nudge-">Nudge −</button>
+          <button class="nudge nudge+">Nudge +</button>
+        </div>
+        <div class="row tempo">
+          <label>Tempo
+            <input type="range" min="-8" max="8" step="0.01" value="0" class="tempo" />
+            <span class="tempo-readout">0.00%</span>
+          </label>
+          <label>BPM
+            <input type="number" min="40" max="220" step="0.1" value="128" class="bpm" />
+          </label>
+          <button class="set-beat1" title="Mark beat 1 at current position">Set Beat 1</button>
+        </div>
+        <div class="row loop">
+          <button class="loop4" title="Toggle 4-beat loop">Loop 4</button>
+        </div>
+        <div class="row eq">
+          <label>Low
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-low" />
+          </label>
+          <label>Mid
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-mid" />
+          </label>
+          <label>High
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-high" />
+          </label>
+        </div>
+        <div class="row filter">
+          <label>Filter LP ←→ HP
+            <input type="range" min="-1" max="1" step="0.01" value="0" class="filter" />
+          </label>
+        </div>
+        <div class="row gain">
+          <label>Gain
+            <input type="range" min="-24" max="12" step="0.1" value="0" class="gain" />
+          </label>
+          <label>Echo Send
+            <input type="range" min="0" max="1" step="0.01" value="0" class="send-delay" />
+          </label>
+          <label class="cue-toggle"><input type="checkbox" class="cue-toggle-input" /> Cue</label>
+        </div>
+        <div class="row hotcues">
+          <div class="hotcue" data-idx="0"><button class="hc-go">1</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="1"><button class="hc-go">2</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="2"><button class="hc-go">3</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="3"><button class="hc-go">4</button><button class="hc-set">Set</button></div>
+        </div>
+        <div class="row keys">
+          <label>Key
+            <input type="text" class="key" placeholder="e.g., 8A or Am" />
+          </label>
+          <div class="beat-indicator">
+            <span class="beat-dot" data-i="0"></span>
+            <span class="beat-dot" data-i="1"></span>
+            <span class="beat-dot" data-i="2"></span>
+            <span class="beat-dot" data-i="3"></span>
+          </div>
+        </div>
+        <div class="meter"><div class="bar"></div></div>
+      </section>
+
+      <section class="center">
+        <div class="xfader">
+          <label>Crossfader
+            <input id="crossfader" type="range" min="-1" max="1" step="0.01" value="0" />
+          </label>
+        </div>
+        <div class="master">
+          <label>Master Vol
+            <input id="masterGain" type="range" min="-24" max="6" step="0.1" value="0" />
+          </label>
+          <label>Cue Mix
+            <input id="cueMix" type="range" min="0" max="1" step="0.01" value="0.5" />
+          </label>
+          <div class="fx">
+            <h3>Echo</h3>
+            <label>Time
+              <input id="delayTime" type="range" min="0.08" max="0.8" step="0.01" value="0.3" />
+            </label>
+            <label>Feedback
+              <input id="delayFeedback" type="range" min="0" max="0.9" step="0.01" value="0.35" />
+            </label>
+            <label>Wet
+              <input id="delayWet" type="range" min="0" max="1" step="0.01" value="0.2" />
+            </label>
+          </div>
+          <div id="harmonicStatus" class="harmonic">Keys: —</div>
+          <div class="meter master-meter"><div class="bar"></div></div>
+        </div>
+      </section>
+
+      <section class="deck" data-deck="B">
+        <h2>Deck B</h2>
+        <div class="row file">
+          <input type="file" accept="audio/*" class="file-input" />
+          <span class="track-name" title="Loaded track name">No track</span>
+        </div>
+        <div class="row transport">
+          <button class="play">Play</button>
+          <button class="sync" title="Sync tempo & phase to other deck">Sync</button>
+          <button class="nudge nudge-">Nudge −</button>
+          <button class="nudge nudge+">Nudge +</button>
+        </div>
+        <div class="row tempo">
+          <label>Tempo
+            <input type="range" min="-8" max="8" step="0.01" value="0" class="tempo" />
+            <span class="tempo-readout">0.00%</span>
+          </label>
+          <label>BPM
+            <input type="number" min="40" max="220" step="0.1" value="128" class="bpm" />
+          </label>
+          <button class="set-beat1" title="Mark beat 1 at current position">Set Beat 1</button>
+        </div>
+        <div class="row loop">
+          <button class="loop4" title="Toggle 4-beat loop">Loop 4</button>
+        </div>
+        <div class="row eq">
+          <label>Low
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-low" />
+          </label>
+          <label>Mid
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-mid" />
+          </label>
+          <label>High
+            <input type="range" min="-12" max="12" step="0.1" value="0" class="eq-high" />
+          </label>
+        </div>
+        <div class="row filter">
+          <label>Filter LP ←→ HP
+            <input type="range" min="-1" max="1" step="0.01" value="0" class="filter" />
+          </label>
+        </div>
+        <div class="row gain">
+          <label>Gain
+            <input type="range" min="-24" max="12" step="0.1" value="0" class="gain" />
+          </label>
+          <label>Echo Send
+            <input type="range" min="0" max="1" step="0.01" value="0" class="send-delay" />
+          </label>
+          <label class="cue-toggle"><input type="checkbox" class="cue-toggle-input" /> Cue</label>
+        </div>
+        <div class="row hotcues">
+          <div class="hotcue" data-idx="0"><button class="hc-go">1</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="1"><button class="hc-go">2</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="2"><button class="hc-go">3</button><button class="hc-set">Set</button></div>
+          <div class="hotcue" data-idx="3"><button class="hc-go">4</button><button class="hc-set">Set</button></div>
+        </div>
+        <div class="row keys">
+          <label>Key
+            <input type="text" class="key" placeholder="e.g., 9A or C" />
+          </label>
+          <div class="beat-indicator">
+            <span class="beat-dot" data-i="0"></span>
+            <span class="beat-dot" data-i="1"></span>
+            <span class="beat-dot" data-i="2"></span>
+            <span class="beat-dot" data-i="3"></span>
+          </div>
+        </div>
+        <div class="meter"><div class="bar"></div></div>
+      </section>
+    </main>
+
+    <!-- Tutorial overlay -->
+    <div id="coach" class="coach hidden">
+      <div class="coach-dim"></div>
+      <div class="coach-spotlight"></div>
+      <div class="coach-card">
+        <div class="coach-title"></div>
+        <div class="coach-body"></div>
+        <div class="coach-ctrls">
+          <button class="coach-prev">Back</button>
+          <div class="coach-progress"></div>
+          <button class="coach-next">Next</button>
+          <button class="coach-skip" title="Exit tutorial">Skip</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help" class="help hidden">
+      <div class="help-inner">
+        <h2>Top 10 DJ Techniques (Controls Included)</h2>
+        <ol>
+          <li>Beatmatching — Tempo slider, Sync, Nudge</li>
+          <li>Phrasing — Set Beat 1, 1–4 beat dots</li>
+          <li>EQing — Low/Mid/High ±12 dB</li>
+          <li>Gain staging — Deck Gain + meters</li>
+          <li>Crossfading — Constant‑power crossfader</li>
+          <li>Looping — 4‑beat loop toggle</li>
+          <li>Hot Cues — 1–4 set/trigger</li>
+          <li>Filtering — Single knob LP↔HP</li>
+          <li>Effects — Echo send + time/feedback/wet</li>
+          <li>Harmonic mixing — Key fields + compatibility hint</li>
+        </ol>
+        <p>Tip: click “Start Audio” first (required by browsers).</p>
+        <button id="closeHelp">Close</button>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+  </html>
