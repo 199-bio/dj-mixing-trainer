@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="visual">
     <header class="topbar">
       <h1>DJ Mixing Trainer</h1>
       <div class="actions">
@@ -22,6 +22,78 @@
     <main class="layout">
       <section class="deck" data-deck="A">
         <h2>Deck A</h2>
+        <div class="skin deck-skin" data-sdeck="A">
+          <svg viewBox="0 0 360 260" class="skin-svg" aria-hidden="true">
+            <!-- EQ knobs -->
+            <g class="knob" data-role="eq-low" transform="translate(60,46)">
+              <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
+              <text y="38" class="label">LOW</text>
+            </g>
+            <g class="knob" data-role="eq-mid" transform="translate(120,46)">
+              <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
+              <text y="38" class="label">MID</text>
+            </g>
+            <g class="knob" data-role="eq-high" transform="translate(180,46)">
+              <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
+              <text y="38" class="label">HI</text>
+            </g>
+            <!-- Filter & Gain -->
+            <g class="knob" data-role="filter" transform="translate(240,46)">
+              <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
+              <text y="38" class="label">FILTER</text>
+            </g>
+            <g class="knob" data-role="gain" transform="translate(300,46)">
+              <circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/>
+              <text y="38" class="label">GAIN</text>
+            </g>
+            <!-- Transport buttons -->
+            <g class="button" data-role="cue" transform="translate(40,108)">
+              <circle r="16" class="btn-face"/>
+              <circle r="20" class="led-ring led-orange"/>
+              <text y="34" class="label">CUE</text>
+            </g>
+            <g class="button" data-role="play" transform="translate(88,108)">
+              <circle r="16" class="btn-face"/>
+              <circle r="20" class="led-ring led-green"/>
+              <text y="34" class="label">PLAY</text>
+            </g>
+            <g class="button" data-role="sync" transform="translate(136,108)">
+              <circle r="16" class="btn-face"/>
+              <circle r="20" class="led-ring led-blue"/>
+              <text y="34" class="label">SYNC</text>
+            </g>
+            <g class="button square" data-role="loop" transform="translate(188,96)">
+              <rect x="-14" y="-14" width="28" height="28" rx="6" class="btn-face"/>
+              <rect x="-18" y="-18" width="36" height="36" rx="8" class="led-frame led-cyan"/>
+              <text y="34" class="label">LOOP</text>
+            </g>
+            <!-- Hotcues -->
+            <g class="pads" transform="translate(250,92)">
+              <g class="pad" data-role="hot1" transform="translate(0,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot2" transform="translate(34,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot3" transform="translate(68,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot4" transform="translate(102,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <text x="52" y="42" class="label" text-anchor="middle">HOT CUES</text>
+            </g>
+            <!-- Tempo fader (vertical) -->
+            <g class="fader v" data-role="tempo" transform="translate(28,200)">
+              <rect x="-3" y="-60" width="6" height="120" rx="3" class="track"/>
+              <rect class="thumb" x="-10" y="-6" width="20" height="12" rx="3" />
+              <text x="0" y="38" class="label" text-anchor="middle">TEMPO</text>
+            </g>
+            <!-- Meter + beats -->
+            <g transform="translate(20,230)">
+              <rect x="0" y="0" width="220" height="10" rx="4" class="meter-bg"/>
+              <rect x="0" y="0" width="6" height="10" rx="4" class="meter-fill" data-role="meter"/>
+              <g transform="translate(240,5)" class="beats">
+                <circle r="5" cx="0" cy="0" class="beat-dot" data-role="beat0"/>
+                <circle r="5" cx="16" cy="0" class="beat-dot" data-role="beat1"/>
+                <circle r="5" cx="32" cy="0" class="beat-dot" data-role="beat2"/>
+                <circle r="5" cx="48" cy="0" class="beat-dot" data-role="beat3"/>
+              </g>
+            </g>
+          </svg>
+        </div>
         <div class="row file">
           <input type="file" accept="audio/*" class="file-input" />
           <span class="track-name" title="Loaded track name">No track</span>
@@ -91,6 +163,22 @@
       </section>
 
       <section class="center">
+        <div class="skin center-skin">
+          <svg viewBox="0 0 320 140" class="skin-svg" aria-hidden="true">
+            <!-- Crossfader -->
+            <g class="fader h" data-role="crossfader" transform="translate(30,36)">
+              <rect x="0" y="0" width="260" height="6" rx="3" class="track"/>
+              <rect class="thumb" x="0" y="-6" width="24" height="18" rx="4" />
+              <text x="130" y="24" class="label" text-anchor="middle">CROSSFADER</text>
+            </g>
+            <!-- Echo knobs -->
+            <g transform="translate(40,90)">
+              <g class="knob" data-role="echo-time" transform="translate(0,0)"><circle r="18" class="knob-face"/><line y1="-12" y2="-20" class="knob-pointer"/><text y="34" class="label">TIME</text></g>
+              <g class="knob" data-role="echo-feedback" transform="translate(80,0)"><circle r="18" class="knob-face"/><line y1="-12" y2="-20" class="knob-pointer"/><text y="34" class="label">FDBK</text></g>
+              <g class="knob" data-role="echo-wet" transform="translate(160,0)"><circle r="18" class="knob-face"/><line y1="-12" y2="-20" class="knob-pointer"/><text y="34" class="label">WET</text></g>
+            </g>
+          </svg>
+        </div>
         <div class="xfader">
           <label>Crossfader
             <input id="crossfader" type="range" min="-1" max="1" step="0.01" value="0" />
@@ -122,6 +210,46 @@
 
       <section class="deck" data-deck="B">
         <h2>Deck B</h2>
+        <div class="skin deck-skin" data-sdeck="B">
+          <svg viewBox="0 0 360 260" class="skin-svg" aria-hidden="true">
+            <!-- EQ knobs -->
+            <g class="knob" data-role="eq-low" transform="translate(60,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">LOW</text></g>
+            <g class="knob" data-role="eq-mid" transform="translate(120,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">MID</text></g>
+            <g class="knob" data-role="eq-high" transform="translate(180,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">HI</text></g>
+            <g class="knob" data-role="filter" transform="translate(240,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">FILTER</text></g>
+            <g class="knob" data-role="gain" transform="translate(300,46)"><circle r="22" class="knob-face"/><line y1="-14" y2="-22" class="knob-pointer"/><text y="38" class="label">GAIN</text></g>
+            <!-- Transport -->
+            <g class="button" data-role="cue" transform="translate(40,108)"><circle r="16" class="btn-face"/><circle r="20" class="led-ring led-orange"/><text y="34" class="label">CUE</text></g>
+            <g class="button" data-role="play" transform="translate(88,108)"><circle r="16" class="btn-face"/><circle r="20" class="led-ring led-green"/><text y="34" class="label">PLAY</text></g>
+            <g class="button" data-role="sync" transform="translate(136,108)"><circle r="16" class="btn-face"/><circle r="20" class="led-ring led-blue"/><text y="34" class="label">SYNC</text></g>
+            <g class="button square" data-role="loop" transform="translate(188,96)"><rect x="-14" y="-14" width="28" height="28" rx="6" class="btn-face"/><rect x="-18" y="-18" width="36" height="36" rx="8" class="led-frame led-cyan"/><text y="34" class="label">LOOP</text></g>
+            <!-- Pads -->
+            <g class="pads" transform="translate(250,92)">
+              <g class="pad" data-role="hot1" transform="translate(0,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot2" transform="translate(34,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot3" transform="translate(68,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <g class="pad" data-role="hot4" transform="translate(102,0)"><rect x="-12" y="-12" width="24" height="24" rx="5" class="pad-face"/><rect x="-15" y="-15" width="30" height="30" rx="7" class="led-frame led-amber"/></g>
+              <text x="52" y="42" class="label" text-anchor="middle">HOT CUES</text>
+            </g>
+            <!-- Tempo fader -->
+            <g class="fader v" data-role="tempo" transform="translate(28,200)">
+              <rect x="-3" y="-60" width="6" height="120" rx="3" class="track"/>
+              <rect class="thumb" x="-10" y="-6" width="20" height="12" rx="3" />
+              <text x="0" y="38" class="label" text-anchor="middle">TEMPO</text>
+            </g>
+            <!-- Meter + beats -->
+            <g transform="translate(20,230)">
+              <rect x="0" y="0" width="220" height="10" rx="4" class="meter-bg"/>
+              <rect x="0" y="0" width="6" height="10" rx="4" class="meter-fill" data-role="meter"/>
+              <g transform="translate(240,5)" class="beats">
+                <circle r="5" cx="0" cy="0" class="beat-dot" data-role="beat0"/>
+                <circle r="5" cx="16" cy="0" class="beat-dot" data-role="beat1"/>
+                <circle r="5" cx="32" cy="0" class="beat-dot" data-role="beat2"/>
+                <circle r="5" cx="48" cy="0" class="beat-dot" data-role="beat3"/>
+              </g>
+            </g>
+          </svg>
+        </div>
         <div class="row file">
           <input type="file" accept="audio/*" class="file-input" />
           <span class="track-name" title="Loaded track name">No track</span>
