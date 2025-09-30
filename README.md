@@ -1,7 +1,7 @@
 DJ Mixing Trainer (Web Audio)
 
 What this is
-- A minimal, browser‑based trainer to practice core DJ techniques with two decks and the essential controls only.
+- A minimal, browser‑based trainer to practice core DJ techniques with two decks. Now includes a non‑interactive SVG “hardware” skin so controls look like real physical buttons/knobs/faders for tutorial/demo use.
 - No installs or backend required. Works as a static site (great fit for Vercel).
 
 Top 10 techniques covered (and where to find them)
@@ -28,6 +28,10 @@ Notes
 
 Local dev
 - Open `index.html` directly in a modern browser, or serve the folder with any static server.
+
+Visual (non‑interactive) mode
+- The app defaults to a non‑interactive, animated tutorial skin (SVG). The original HTML controls are hidden in this mode.
+- Use the Start Tutorial button to see the controls animate like a step‑by‑step lesson.
 
 Deploy on Vercel
 - Push this repo to GitHub and import it in Vercel as a static project. Default settings work. A `vercel.json` is included but optional.
